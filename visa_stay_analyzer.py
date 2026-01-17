@@ -39,11 +39,11 @@ def parse_datetime(date_str: str) -> Optional[datetime]:
 
 def calculate_days_between(date1: Optional[datetime], date2: Optional[datetime]) -> int:
     """Calculate days between two dates (inclusive).
-    
+
     Args:
         date1: Start date (should be <= date2)
         date2: End date (should be >= date1)
-        
+
     Returns:
         Number of calendar days from date1 to date2 (inclusive).
         Returns 0 if either date is None or if date2 < date1.
@@ -60,11 +60,11 @@ def calculate_days_between(date1: Optional[datetime], date2: Optional[datetime])
 
 def load_flights(csv_path: str, airport_codes: Set[str]) -> List[Dict]:
     """Load and filter flights from the CSV file.
-    
+
     Args:
         csv_path: Path to Flighty CSV export
         airport_codes: Set of airport codes for the country to analyze
-        
+
     Returns:
         List of flight dictionaries with entry/exit information
     """
@@ -116,10 +116,10 @@ def load_flights(csv_path: str, airport_codes: Set[str]) -> List[Dict]:
 
 def calculate_stays(flights: List[Dict]) -> List[Dict]:
     """Calculate stays from flight entry/exit pairs.
-    
+
     Args:
         flights: List of flight dictionaries
-        
+
     Returns:
         List of stay dictionaries with entry and exit information
     """
@@ -143,12 +143,12 @@ def calculate_stays(flights: List[Dict]) -> List[Dict]:
 
 def calculate_days_in_window(stays: List[Dict], window_start: datetime, window_end: datetime) -> int:
     """Calculate total days spent in country within a time window.
-    
+
     Args:
         stays: List of stay dictionaries
         window_start: Start of the time window
         window_end: End of the time window
-        
+
     Returns:
         Total number of days in the window
     """
@@ -290,7 +290,7 @@ def analyze_visa_stays(csv_path: str, airport_codes: Set[str], country_name: str
                        window_days: int, max_days_in_window: int,
                        max_consecutive_days: int = None, reference_date: datetime = None):
     """Main analysis function.
-    
+
     Args:
         csv_path: Path to Flighty CSV export
         airport_codes: Set of airport codes for the country
@@ -346,7 +346,7 @@ def main():
 Examples:
   # Analyze South Korea stays (90 days in 180, max 60 consecutive)
   %(prog)s -f flights.csv -a ICN,GMP,CJU,PUS -c "South Korea" -w 180 -m 90 -x 60
-  
+
   # Analyze Schengen stays (90 days in 180)
   %(prog)s -f flights.csv -a CDG,AMS,FCO,MAD -c "Schengen" -w 180 -m 90
         """
