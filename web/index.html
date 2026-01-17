@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Days of Stay</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            :root {
+                --bg: #fafafa;
+                --surface: #ffffff;
+                --text-primary: #1d1d1f;
+                --text-secondary: #86868b;
+                --accent: #007aff;
+                --success: #34c759;
+                --warning: #ff9500;
+                --border: #e5e5e7;
+                --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                    "Segoe UI", sans-serif;
+                background: var(--bg);
+                color: var(--text-primary);
+                line-height: 1.5;
+                min-height: 100vh;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            .container {
+                max-width: 540px;
+                margin: 0 auto;
+                padding: 48px 24px;
+            }
+
+            /* Header */
+            header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 40px;
+            }
+
+            h1 {
+                font-size: 28px;
+                font-weight: 600;
+                letter-spacing: -0.5px;
+            }
+
+            .country-select {
+                font-family: inherit;
+                font-size: 15px;
+                padding: 8px 12px;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                background: var(--surface);
+                color: var(--text-primary);
+                cursor: pointer;
+                outline: none;
+                transition: border-color 0.2s;
+            }
+
+            .country-select:hover {
+                border-color: var(--text-secondary);
+            }
+
+            .country-select:focus {
+                border-color: var(--accent);
+            }
+
+            /* Upload Zone */
+            .upload-zone {
+                background: var(--surface);
+                border: 2px dashed var(--border);
+                border-radius: 16px;
+                padding: 48px 24px;
+                text-align: center;
+                cursor: pointer;
+                transition:
+                    border-color 0.2s,
+                    background 0.2s;
+            }
+
+            .upload-zone:hover,
+            .upload-zone.dragover {
+                border-color: var(--accent);
+                background: rgba(0, 122, 255, 0.02);
+            }
+
+            .upload-zone.has-file {
+                padding: 16px 24px;
+                border-style: solid;
+                cursor: default;
+            }
+
+            .upload-icon {
+                width: 48px;
+                height: 48px;
+                margin: 0 auto 16px;
+                opacity: 0.4;
+            }
+
+            .upload-text {
+                font-size: 17px;
+                color: var(--text-secondary);
+            }
+
+            .upload-text strong {
+                color: var(--accent);
+                font-weight: 500;
+            }
+
+            .upload-hint {
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin-top: 8px;
+            }
+
+            .file-info {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .file-name {
+                font-size: 15px;
+                color: var(--text-secondary);
+            }
+
+            .file-change {
+                font-size: 15px;
+                color: var(--accent);
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-family: inherit;
+            }
+
+            .file-change:hover {
+                text-decoration: underline;
+            }
+
+            #file-input {
+                display: none;
+            }
+
+            /* Results Card */
+            .results {
+                display: none;
+                background: var(--surface);
+                border-radius: 16px;
+                box-shadow: var(--shadow);
+                margin-top: 24px;
+                overflow: hidden;
+            }
+
+            .results.visible {
+                display: block;
+                animation: fadeIn 0.3s ease;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(8px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* Hero Status */
+            .hero {
+                padding: 48px 24px;
+                text-align: center;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .hero-number {
+                font-size: 72px;
+                font-weight: 600;
+                letter-spacing: -2px;
+                line-height: 1;
+                color: var(--text-primary);
+            }
+
+            .hero-number.warning {
+                color: var(--warning);
+            }
+
+            .hero-number.danger {
+                color: #ff3b30;
+            }
+
+            .hero-label {
+                font-size: 17px;
+                color: var(--text-secondary);
+                margin-top: 8px;
+            }
+
+            .hero-detail {
+                font-size: 15px;
+                color: var(--text-secondary);
+                margin-top: 24px;
+                line-height: 1.6;
+            }
+
+            .hero-detail span {
+                display: inline-block;
+            }
+
+            .hero-detail .separator {
+                margin: 0 8px;
+                opacity: 0.5;
+            }
+
+            /* Section */
+            .section {
+                padding: 24px;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .section:last-child {
+                border-bottom: none;
+            }
+
+            .section-header {
+                font-size: 13px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: var(--text-secondary);
+                margin-bottom: 16px;
+            }
+
+            /* Availability */
+            .availability-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: baseline;
+                padding: 8px 0;
+            }
+
+            .availability-item:first-child {
+                padding-top: 0;
+            }
+
+            .availability-item:last-child {
+                padding-bottom: 0;
+            }
+
+            .availability-label {
+                font-size: 15px;
+                color: var(--text-secondary);
+            }
+
+            .availability-value {
+                font-size: 15px;
+                font-weight: 500;
+            }
+
+            .availability-value.available {
+                color: var(--success);
+            }
+
+            .availability-value.wait {
+                color: var(--warning);
+            }
+
+            /* Stays List */
+            .stays-toggle {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+                background: none;
+                border: none;
+                padding: 0;
+                cursor: pointer;
+                font-family: inherit;
+            }
+
+            .stays-toggle .section-header {
+                margin-bottom: 0;
+            }
+
+            .stays-toggle-icon {
+                font-size: 13px;
+                color: var(--text-secondary);
+                transition: transform 0.2s;
+            }
+
+            .stays-toggle.open .stays-toggle-icon {
+                transform: rotate(180deg);
+            }
+
+            .stays-list {
+                display: none;
+                margin-top: 16px;
+            }
+
+            .stays-list.visible {
+                display: block;
+            }
+
+            .stay-item {
+                padding: 12px 0;
+                border-top: 1px solid var(--border);
+            }
+
+            .stay-item:first-child {
+                border-top: none;
+                padding-top: 0;
+            }
+
+            .stay-dates {
+                font-size: 15px;
+                color: var(--text-primary);
+            }
+
+            .stay-meta {
+                font-size: 13px;
+                color: var(--text-secondary);
+                margin-top: 4px;
+            }
+
+            .stay-days {
+                font-weight: 500;
+            }
+
+            .stay-days.in-window {
+                color: var(--accent);
+            }
+
+            /* Error State */
+            .error {
+                padding: 24px;
+                text-align: center;
+                color: var(--text-secondary);
+            }
+
+            .error-icon {
+                font-size: 32px;
+                margin-bottom: 12px;
+                opacity: 0.5;
+            }
+
+            /* Currently Abroad */
+            .abroad-notice {
+                background: rgba(255, 149, 0, 0.08);
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 15px;
+                color: var(--warning);
+                margin-top: 24px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>Days of Stay</h1>
+                <select id="country-select" class="country-select">
+                    <option value="korea">South Korea</option>
+                    <option value="schengen">Schengen Area</option>
+                    <option value="japan">Japan</option>
+                    <option value="thailand">Thailand</option>
+                    <option value="uk">United Kingdom</option>
+                </select>
+            </header>
+
+            <div id="upload-zone" class="upload-zone">
+                <svg
+                    class="upload-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                >
+                    <path
+                        d="M12 16V4m0 0L8 8m4-4l4 4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+                    />
+                </svg>
+                <div class="upload-text">
+                    <strong>Drop your Flighty export</strong> or click to browse
+                </div>
+                <div class="upload-hint">CSV file from Flighty app</div>
+            </div>
+            <input type="file" id="file-input" accept=".csv" />
+
+            <div id="results" class="results">
+                <div id="error-state" class="error" style="display: none">
+                    <div class="error-icon">⚠</div>
+                    <div id="error-message"></div>
+                </div>
+                <div id="results-content">
+                    <div class="hero">
+                        <div id="hero-number" class="hero-number">60</div>
+                        <div class="hero-label">days available</div>
+                        <div id="hero-detail" class="hero-detail">
+                            <span id="days-used">23 of 90 days used</span>
+                            <span class="separator">·</span>
+                            <span id="days-remaining">67 remaining</span>
+                        </div>
+                        <div
+                            id="abroad-notice"
+                            class="abroad-notice"
+                            style="display: none"
+                        ></div>
+                    </div>
+
+                    <div class="section">
+                        <div class="section-header">Future Availability</div>
+                        <div id="availability" class="availability">
+                            <div class="availability-item">
+                                <span class="availability-label"
+                                    >30-day stay</span
+                                >
+                                <span
+                                    id="avail-30"
+                                    class="availability-value available"
+                                    >Available now</span
+                                >
+                            </div>
+                            <div id="avail-60-row" class="availability-item">
+                                <span class="availability-label"
+                                    >60-day stay</span
+                                >
+                                <span
+                                    id="avail-60"
+                                    class="availability-value available"
+                                    >Available now</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <button id="stays-toggle" class="stays-toggle">
+                            <span class="section-header">Your Stays</span>
+                            <span class="stays-toggle-icon">▼</span>
+                        </button>
+                        <div id="stays-list" class="stays-list"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Country presets
+            const COUNTRIES = {
+                korea: {
+                    name: "South Korea",
+                    airports: new Set([
+                        "ICN",
+                        "GMP",
+                        "CJU",
+                        "PUS",
+                        "KWJ",
+                        "TAE",
+                        "RSU",
+                        "USN",
+                        "KUV",
+                        "KPO",
+                        "WJU",
+                        "HIN",
+                        "MWX",
+                        "KAG",
+                    ]),
+                    windowDays: 180,
+                    maxDays: 90,
+                    maxConsecutive: 60,
+                },
+                schengen: {
+                    name: "Schengen Area",
+                    airports: new Set([
+                        "CDG",
+                        "ORY",
+                        "AMS",
+                        "FCO",
+                        "CIA",
+                        "MAD",
+                        "BCN",
+                        "FRA",
+                        "MUC",
+                        "VIE",
+                        "ZRH",
+                        "BRU",
+                        "LIS",
+                        "ATH",
+                        "PRG",
+                        "WAW",
+                        "WMI",
+                        "CPH",
+                        "OSL",
+                        "ARN",
+                        "HEL",
+                        "DUB",
+                    ]),
+                    windowDays: 180,
+                    maxDays: 90,
+                    maxConsecutive: null,
+                },
+                japan: {
+                    name: "Japan",
+                    airports: new Set([
+                        "NRT",
+                        "HND",
+                        "KIX",
+                        "ITM",
+                        "NGO",
+                        "FUK",
+                        "CTS",
+                        "OKA",
+                        "NGS",
+                    ]),
+                    windowDays: 180,
+                    maxDays: 90,
+                    maxConsecutive: null,
+                },
+                thailand: {
+                    name: "Thailand",
+                    airports: new Set([
+                        "BKK",
+                        "DMK",
+                        "CNX",
+                        "HKT",
+                        "USM",
+                        "KBV",
+                        "CEI",
+                    ]),
+                    windowDays: 180,
+                    maxDays: 90,
+                    maxConsecutive: 30,
+                },
+                uk: {
+                    name: "United Kingdom",
+                    airports: new Set([
+                        "LHR",
+                        "LGW",
+                        "STN",
+                        "LTN",
+                        "MAN",
+                        "EDI",
+                        "BHX",
+                        "GLA",
+                        "BRS",
+                        "LCY",
+                    ]),
+                    windowDays: 180,
+                    maxDays: 180,
+                    maxConsecutive: null,
+                },
+            };
+
+            let currentFile = null;
+            let currentStays = [];
+            let currentlyAbroad = null;
+
+            // DOM elements
+            const uploadZone = document.getElementById("upload-zone");
+            const fileInput = document.getElementById("file-input");
+            const countrySelect = document.getElementById("country-select");
+            const results = document.getElementById("results");
+            const staysToggle = document.getElementById("stays-toggle");
+            const staysList = document.getElementById("stays-list");
+
+            // Event listeners
+            uploadZone.addEventListener("click", () => {
+                if (!uploadZone.classList.contains("has-file")) {
+                    fileInput.click();
+                }
+            });
+
+            uploadZone.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                uploadZone.classList.add("dragover");
+            });
+
+            uploadZone.addEventListener("dragleave", () => {
+                uploadZone.classList.remove("dragover");
+            });
+
+            uploadZone.addEventListener("drop", (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove("dragover");
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith(".csv")) {
+                    handleFile(file);
+                }
+            });
+
+            fileInput.addEventListener("change", (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFile(file);
+                }
+            });
+
+            countrySelect.addEventListener("change", () => {
+                if (currentFile) {
+                    analyzeFile(currentFile);
+                }
+            });
+
+            staysToggle.addEventListener("click", () => {
+                staysToggle.classList.toggle("open");
+                staysList.classList.toggle("visible");
+            });
+
+            // File handling
+            function handleFile(file) {
+                currentFile = file;
+                uploadZone.classList.add("has-file");
+                uploadZone.innerHTML = `
+        <div class="file-info">
+          <span class="file-name">${file.name}</span>
+          <button class="file-change" onclick="changeFile(event)">Change</button>
+        </div>
+      `;
+                analyzeFile(file);
+            }
+
+            function changeFile(e) {
+                e.stopPropagation();
+                fileInput.click();
+            }
+
+            // CSV parsing
+            function parseCSV(text) {
+                const lines = text.trim().split("\n");
+                if (lines.length < 2) return [];
+
+                const headers = parseCSVLine(lines[0]);
+                const rows = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    const values = parseCSVLine(lines[i]);
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index] || "";
+                    });
+                    rows.push(row);
+                }
+
+                return rows;
+            }
+
+            function parseCSVLine(line) {
+                const values = [];
+                let current = "";
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === "," && !inQuotes) {
+                        values.push(current.trim());
+                        current = "";
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
+
+                return values;
+            }
+
+            // Date parsing
+            function parseDateTime(dateStr) {
+                if (!dateStr) return null;
+
+                // Try standard Date parsing (handles ISO and many formats)
+                const date = new Date(dateStr.replace("T", " "));
+                if (!isNaN(date.getTime())) return date;
+
+                // Try MM/DD/YYYY format
+                const mdyMatch = dateStr.match(
+                    /^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?$/,
+                );
+                if (mdyMatch) {
+                    return new Date(
+                        mdyMatch[3],
+                        mdyMatch[1] - 1,
+                        mdyMatch[2],
+                        mdyMatch[4] || 0,
+                        mdyMatch[5] || 0,
+                        mdyMatch[6] || 0,
+                    );
+                }
+
+                return null;
+            }
+
+            // Calculate days between two dates (inclusive)
+            function calculateDaysBetween(date1, date2) {
+                if (!date1 || !date2 || date2 < date1) return 0;
+
+                // Normalize to midnight for accurate day calculation
+                const d1 = new Date(
+                    date1.getFullYear(),
+                    date1.getMonth(),
+                    date1.getDate(),
+                );
+                const d2 = new Date(
+                    date2.getFullYear(),
+                    date2.getMonth(),
+                    date2.getDate(),
+                );
+                const msPerDay = 1000 * 60 * 60 * 24;
+
+                return Math.floor((d2 - d1) / msPerDay) + 1;
+            }
+
+            // Parse flights from CSV
+            function parseFlights(rows, airports) {
+                const flights = [];
+
+                for (const row of rows) {
+                    const fromAirport = (row["From"] || "")
+                        .trim()
+                        .toUpperCase();
+                    const toAirport = (row["To"] || "").trim().toUpperCase();
+                    const canceled =
+                        (row["Canceled"] || "").toLowerCase() === "true";
+
+                    if (canceled) continue;
+
+                    const isArrival =
+                        airports.has(toAirport) && !airports.has(fromAirport);
+                    const isDeparture =
+                        airports.has(fromAirport) && !airports.has(toAirport);
+
+                    if (isArrival || isDeparture) {
+                        const arrivalTime =
+                            parseDateTime(row["Gate Arrival (Actual)"]) ||
+                            parseDateTime(row["Landing (Actual)"]);
+                        const departureTime =
+                            parseDateTime(row["Gate Departure (Actual)"]) ||
+                            parseDateTime(row["Take off (Actual)"]);
+
+                        flights.push({
+                            date: row["Date"],
+                            flight: `${row["Airline"] || ""} ${row["Flight"] || ""}`.trim(),
+                            from: fromAirport,
+                            to: toAirport,
+                            isArrival,
+                            isDeparture,
+                            arrivalTime,
+                            departureTime,
+                        });
+                    }
+                }
+
+                // Sort by time
+                flights.sort((a, b) => {
+                    const timeA = a.isArrival ? a.arrivalTime : a.departureTime;
+                    const timeB = b.isArrival ? b.arrivalTime : b.departureTime;
+                    return (timeA || 0) - (timeB || 0);
+                });
+
+                return flights;
+            }
+
+            // Calculate stays from flights
+            function calculateStays(flights) {
+                const stays = [];
+                let currentEntry = null;
+
+                for (const flight of flights) {
+                    if (flight.isArrival) {
+                        currentEntry = flight;
+                    } else if (flight.isDeparture && currentEntry) {
+                        stays.push({
+                            entry: currentEntry,
+                            exit: flight,
+                            entryDate: currentEntry.arrivalTime,
+                            exitDate: flight.departureTime,
+                        });
+                        currentEntry = null;
+                    }
+                }
+
+                // Check if currently abroad (entry without exit)
+                currentlyAbroad = currentEntry;
+
+                return stays;
+            }
+
+            // Calculate days in window
+            function calculateDaysInWindow(stays, windowStart, windowEnd) {
+                let totalDays = 0;
+
+                for (const stay of stays) {
+                    const clampedEntry = new Date(
+                        Math.max(stay.entryDate, windowStart),
+                    );
+                    const clampedExit = new Date(
+                        Math.min(stay.exitDate, windowEnd),
+                    );
+
+                    if (clampedEntry <= clampedExit) {
+                        totalDays += calculateDaysBetween(
+                            clampedEntry,
+                            clampedExit,
+                        );
+                    }
+                }
+
+                return totalDays;
+            }
+
+            // Calculate future availability
+            function calculateFutureAvailability(
+                stays,
+                referenceDate,
+                windowDays,
+                maxDays,
+                maxConsecutive,
+                desiredDays,
+            ) {
+                const maxUsedDays = maxDays - desiredDays;
+                const windowStart = new Date(referenceDate);
+                windowStart.setDate(windowStart.getDate() - (windowDays - 1));
+                const currentDays = calculateDaysInWindow(
+                    stays,
+                    windowStart,
+                    referenceDate,
+                );
+
+                if (currentDays <= maxUsedDays) {
+                    return { available: true };
+                }
+
+                // Find future date
+                for (let daysForward = 1; daysForward <= 365; daysForward++) {
+                    const futureDate = new Date(referenceDate);
+                    futureDate.setDate(futureDate.getDate() + daysForward);
+
+                    const futureWindowStart = new Date(futureDate);
+                    futureWindowStart.setDate(
+                        futureWindowStart.getDate() - (windowDays - 1),
+                    );
+
+                    const futureDays = calculateDaysInWindow(
+                        stays,
+                        futureWindowStart,
+                        futureDate,
+                    );
+
+                    if (futureDays <= maxUsedDays) {
+                        return {
+                            available: false,
+                            waitUntil: futureDate,
+                            daysToWait: daysForward,
+                        };
+                    }
+                }
+
+                return { available: false, waitUntil: null };
+            }
+
+            // Format date
+            function formatDate(date) {
+                return date.toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                });
+            }
+
+            // Analyze file
+            function analyzeFile(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const text = e.target.result;
+                    const rows = parseCSV(text);
+
+                    if (rows.length === 0) {
+                        showError("This doesn't look like a valid CSV file");
+                        return;
+                    }
+
+                    // Check for required columns
+                    const requiredColumns = ["From", "To", "Date"];
+                    const firstRow = rows[0];
+                    const missingColumns = requiredColumns.filter(
+                        (col) => !(col in firstRow),
+                    );
+
+                    if (missingColumns.length > 0) {
+                        showError(
+                            `Missing columns: ${missingColumns.join(", ")}. This doesn't look like a Flighty export.`,
+                        );
+                        return;
+                    }
+
+                    const country = COUNTRIES[countrySelect.value];
+                    const flights = parseFlights(rows, country.airports);
+
+                    if (flights.length === 0) {
+                        showError(
+                            `No flights to/from ${country.name} found in this file`,
+                        );
+                        return;
+                    }
+
+                    currentStays = calculateStays(flights);
+                    renderResults(currentStays, country);
+                };
+
+                reader.readAsText(file);
+            }
+
+            // Show error
+            function showError(message) {
+                const errorState = document.getElementById("error-state");
+                const resultsContent =
+                    document.getElementById("results-content");
+
+                results.classList.add("visible");
+                errorState.style.display = "block";
+                document.getElementById("error-message").textContent = message;
+                resultsContent.style.display = "none";
+            }
+
+            // Render results
+            function renderResults(stays, country) {
+                // Show results, hide error
+                document.getElementById("error-state").style.display = "none";
+                document.getElementById("results-content").style.display =
+                    "block";
+
+                const referenceDate = new Date();
+                referenceDate.setHours(0, 0, 0, 0);
+
+                const windowStart = new Date(referenceDate);
+                windowStart.setDate(
+                    windowStart.getDate() - (country.windowDays - 1),
+                );
+
+                const totalDays = calculateDaysInWindow(
+                    stays,
+                    windowStart,
+                    referenceDate,
+                );
+                const remainingDays = country.maxDays - totalDays;
+                const maxStay = country.maxConsecutive
+                    ? Math.min(remainingDays, country.maxConsecutive)
+                    : remainingDays;
+
+                // Hero number
+                const heroNumber = document.getElementById("hero-number");
+                heroNumber.textContent = Math.max(0, maxStay);
+                const statusClass =
+                    maxStay <= 0 ? "danger" : maxStay <= 14 ? "warning" : "";
+                heroNumber.className =
+                    "hero-number" + (statusClass ? " " + statusClass : "");
+
+                // Hero detail
+                document.getElementById("days-used").textContent =
+                    `${totalDays} of ${country.maxDays} days used`;
+                document.getElementById("days-remaining").textContent =
+                    country.maxConsecutive
+                        ? `${remainingDays} remaining · ${country.maxConsecutive} max consecutive`
+                        : `${remainingDays} remaining`;
+
+                // Currently abroad notice
+                const abroadNotice = document.getElementById("abroad-notice");
+                if (currentlyAbroad) {
+                    abroadNotice.style.display = "block";
+                    abroadNotice.textContent = `Currently in ${country.name} since ${formatDate(currentlyAbroad.arrivalTime)}`;
+                } else {
+                    abroadNotice.style.display = "none";
+                }
+
+                // Helper to render availability status
+                function renderAvailability(elementId, availability) {
+                    const el = document.getElementById(elementId);
+                    if (availability.available) {
+                        el.textContent = "Available now";
+                        el.className = "availability-value available";
+                    } else if (availability.waitUntil) {
+                        el.textContent = `Wait until ${formatDate(availability.waitUntil)}`;
+                        el.className = "availability-value wait";
+                    } else {
+                        el.textContent = "Not available within a year";
+                        el.className = "availability-value wait";
+                    }
+                }
+
+                // Future availability
+                const avail30 = calculateFutureAvailability(
+                    stays,
+                    referenceDate,
+                    country.windowDays,
+                    country.maxDays,
+                    country.maxConsecutive,
+                    30,
+                );
+                renderAvailability("avail-30", avail30);
+
+                // 60-day availability (hide if max consecutive is less than 60)
+                const avail60Row = document.getElementById("avail-60-row");
+                if (country.maxConsecutive && country.maxConsecutive < 60) {
+                    avail60Row.style.display = "none";
+                } else {
+                    avail60Row.style.display = "flex";
+                    const avail60 = calculateFutureAvailability(
+                        stays,
+                        referenceDate,
+                        country.windowDays,
+                        country.maxDays,
+                        country.maxConsecutive,
+                        60,
+                    );
+                    renderAvailability("avail-60", avail60);
+                }
+
+                // Stays list
+                renderStaysList(stays, windowStart, referenceDate);
+
+                results.classList.add("visible");
+            }
+
+            // Render stays list
+            function renderStaysList(stays, windowStart, referenceDate) {
+                if (stays.length === 0) {
+                    staysList.innerHTML =
+                        '<div class="stay-item"><span class="stay-meta">No completed stays found</span></div>';
+                    return;
+                }
+
+                // Show most recent first
+                const sortedStays = [...stays].reverse();
+
+                staysList.innerHTML = sortedStays
+                    .map((stay) => {
+                        const totalDays = calculateDaysBetween(
+                            stay.entryDate,
+                            stay.exitDate,
+                        );
+                        const clampedEntry = new Date(
+                            Math.max(stay.entryDate, windowStart),
+                        );
+                        const clampedExit = new Date(
+                            Math.min(stay.exitDate, referenceDate),
+                        );
+                        const daysInWindow =
+                            clampedEntry <= clampedExit
+                                ? calculateDaysBetween(
+                                      clampedEntry,
+                                      clampedExit,
+                                  )
+                                : 0;
+                        const inWindow = daysInWindow > 0;
+
+                        // Build window status text
+                        let windowStatus = "";
+                        if (!inWindow) {
+                            windowStatus = " · Outside window";
+                        } else if (daysInWindow !== totalDays) {
+                            windowStatus = ` · ${daysInWindow} in window`;
+                        }
+
+                        return `
+          <div class="stay-item">
+            <div class="stay-dates">${formatDate(stay.entryDate)} – ${formatDate(stay.exitDate)}</div>
+            <div class="stay-meta">
+              <span class="stay-days ${inWindow ? "in-window" : ""}">${totalDays} days</span>${windowStatus}
+              · ${stay.entry.flight} → ${stay.exit.flight}
+            </div>
+          </div>
+        `;
+                    })
+                    .join("");
+            }
+        </script>
+    </body>
+</html>
