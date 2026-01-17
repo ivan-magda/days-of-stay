@@ -10,11 +10,11 @@ Days of Stay Analyzer - A Python CLI tool to analyze visa-free stay limits from 
 
 ```bash
 # South Korea analyzer (uses preconfigured rules: 90 days in 180, max 60 consecutive)
-python analyze_korea_stay.py
-python analyze_korea_stay.py -f FlightyExport-2025-11-20.csv
+uv run analyze-korea-stay
+uv run analyze-korea-stay -f FlightyExport-2025-11-20.csv
 
 # Generic analyzer for any country
-python visa_stay_analyzer.py -f flights.csv -a ICN,GMP,CJU -c "South Korea" -w 180 -m 90 -x 60
+uv run visa-stay-analyzer -f flights.csv -a ICN,GMP,CJU -c "South Korea" -w 180 -m 90 -x 60
 ```
 
 ## Architecture
@@ -42,4 +42,4 @@ Expects Flighty CSV exports with columns: Date, Airline, Flight, From, To, Cance
 
 ## Requirements
 
-Python 3.9+, no external dependencies (stdlib only).
+Python 3.9+, uv for package management. No external dependencies (stdlib only).
