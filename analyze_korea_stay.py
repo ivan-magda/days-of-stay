@@ -32,29 +32,27 @@ WINDOW_DAYS = 180
 MAX_DAYS_IN_WINDOW = 90
 MAX_CONSECUTIVE_DAYS = 60
 
+DEFAULT_CSV_FILE = 'FlightyExport-2025-10-18.csv'
 
-def main():
+
+def main() -> None:
     """Analyze South Korea stays using the base analyzer."""
     parser = argparse.ArgumentParser(
         description='Analyze South Korea visa-free stays from Flighty export data'
     )
-
     parser.add_argument(
         '-f', '--file',
-        default='FlightyExport-2025-10-18.csv',
-        help='Path to Flighty CSV export file (default: FlightyExport-2025-10-18.csv)'
+        default=DEFAULT_CSV_FILE,
+        help=f'Path to Flighty CSV export file (default: {DEFAULT_CSV_FILE})'
     )
-
     args = parser.parse_args()
 
-    # Get the CSV file path
+    # Resolve relative paths relative to the script directory
     csv_path = args.file
-
-    # If it's a relative path, make it relative to the script directory
     if not os.path.isabs(csv_path):
-        csv_path = os.path.join(os.path.dirname(__file__), csv_path)
+        script_dir = os.path.dirname(__file__)
+        csv_path = os.path.join(script_dir, csv_path)
 
-    # Run analysis with Korea-specific parameters
     analyze_visa_stays(
         csv_path=csv_path,
         airport_codes=KOREA_AIRPORTS,
@@ -62,7 +60,6 @@ def main():
         window_days=WINDOW_DAYS,
         max_days_in_window=MAX_DAYS_IN_WINDOW,
         max_consecutive_days=MAX_CONSECUTIVE_DAYS,
-        reference_date=None  # Use today's date
     )
 
 

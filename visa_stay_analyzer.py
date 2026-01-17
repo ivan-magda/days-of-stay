@@ -19,7 +19,7 @@ def parse_datetime(date_str: str) -> Optional[datetime]:
     try:
         return datetime.fromisoformat(date_str.replace('T', ' '))
     except (ValueError, AttributeError, TypeError):
-        pass
+        pass  # Fall through to try other formats
 
     formats = [
         '%Y-%m-%d %H:%M:%S',
@@ -81,7 +81,6 @@ def load_flights(csv_path: str, airport_codes: Set[str]) -> List[Dict]:
                 if canceled:
                     continue
 
-                # Check if this is entry or exit from the country
                 is_arrival = to_airport in airport_codes and from_airport not in airport_codes
                 is_departure = from_airport in airport_codes and to_airport not in airport_codes
 
@@ -155,22 +154,24 @@ def calculate_days_in_window(stays: List[Dict], window_start: datetime, window_e
     total_days = 0
 
     for stay in stays:
-        entry_date = stay['entry_date']
-        exit_date = stay['exit_date']
+        # Clamp stay dates to the window boundaries
+        clamped_entry = max(stay['entry_date'], window_start)
+        clamped_exit = min(stay['exit_date'], window_end)
 
-        window_entry = max(entry_date, window_start)
-        window_exit = min(exit_date, window_end)
-
-        if window_exit >= window_start and window_entry <= window_end:
-            days = calculate_days_between(window_entry, window_exit)
-            total_days += days
+        # Only count if the stay overlaps with the window
+        if clamped_entry <= clamped_exit:
+            total_days += calculate_days_between(clamped_entry, clamped_exit)
 
     return total_days
 
 
-def print_stays_report(stays: List[Dict], window_start: datetime, today: datetime,
-                       country_name: str):
-    """Print detailed report of all stays."""
+def print_stays_report(stays: List[Dict], window_start: datetime, reference_date: datetime,
+                       country_name: str) -> int:
+    """Print detailed report of all stays.
+
+    Returns:
+        Total days spent in window across all stays.
+    """
     print(f"All {country_name} stays:")
     print(f"{'=' * 70}")
 
@@ -179,34 +180,32 @@ def print_stays_report(stays: List[Dict], window_start: datetime, today: datetim
     for i, stay in enumerate(stays, 1):
         entry_date = stay['entry_date']
         exit_date = stay['exit_date']
+        entry_flight = stay['entry']
+        exit_flight = stay['exit']
 
-        # Calculate total days for this stay
         total_stay_days = calculate_days_between(entry_date, exit_date)
 
-        # Calculate days within the window
-        window_entry = max(entry_date, window_start)
-        window_exit = min(exit_date, today)
-
+        # Clamp stay dates to the window boundaries
+        clamped_entry = max(entry_date, window_start)
+        clamped_exit = min(exit_date, reference_date)
         days_in_window = 0
-        if window_exit >= window_start and window_entry <= today:
-            days_in_window = calculate_days_between(window_entry, window_exit)
-
-        in_window = days_in_window > 0
+        if clamped_entry <= clamped_exit:
+            days_in_window = calculate_days_between(clamped_entry, clamped_exit)
 
         print(f"\nStay #{i}:")
-        print(
-            f"  Entry:  {entry_date.strftime('%Y-%m-%d')} - {stay['entry']['flight']} ({stay['entry']['from']} → {stay['entry']['to']})")
-        print(
-            f"  Exit:   {exit_date.strftime('%Y-%m-%d')} - {stay['exit']['flight']} ({stay['exit']['from']} → {stay['exit']['to']})")
+        print(f"  Entry:  {entry_date.strftime('%Y-%m-%d')} - {entry_flight['flight']} "
+              f"({entry_flight['from']} -> {entry_flight['to']})")
+        print(f"  Exit:   {exit_date.strftime('%Y-%m-%d')} - {exit_flight['flight']} "
+              f"({exit_flight['from']} -> {exit_flight['to']})")
         print(f"  Total stay: {total_stay_days} days")
 
-        if in_window:
+        if days_in_window > 0:
             total_days_in_window += days_in_window
             if entry_date < window_start:
-                print(
-                    f"  Days in {window_start.strftime('%Y-%m-%d')} window: {days_in_window} days (from {window_entry.strftime('%Y-%m-%d')} to {window_exit.strftime('%Y-%m-%d')})")
+                print(f"  Days in {window_start.strftime('%Y-%m-%d')} window: {days_in_window} days "
+                      f"(from {clamped_entry.strftime('%Y-%m-%d')} to {clamped_exit.strftime('%Y-%m-%d')})")
             else:
-                print(f"  Days in window: {days_in_window} days ✓")
+                print(f"  Days in window: {days_in_window} days")
         else:
             print(f"  Days in window: 0 days (outside window)")
 
@@ -214,81 +213,88 @@ def print_stays_report(stays: List[Dict], window_start: datetime, today: datetim
 
 
 def print_summary(total_days_in_window: int, max_days_in_window: int,
-                  max_consecutive_days: int, today: datetime, country_name: str):
+                  max_consecutive_days: Optional[int], reference_date: datetime,
+                  country_name: str) -> None:
     """Print summary of visa status."""
+    remaining_days = max_days_in_window - total_days_in_window
+
     print(f"\n{'=' * 70}")
-    print(f"\n📊 SUMMARY:")
+    print(f"\nSUMMARY:")
     print(f"{'=' * 70}")
     print(f"Total days in {country_name} within rolling window: {total_days_in_window} days")
     print(f"Maximum allowed days: {max_days_in_window} days")
-    print(f"Days remaining: {max_days_in_window - total_days_in_window} days")
+    print(f"Days remaining: {remaining_days} days")
 
     if max_consecutive_days:
-        print(f"\n⚠️  Note: Single stay cannot exceed {max_consecutive_days} days consecutively")
+        print(f"\nNote: Single stay cannot exceed {max_consecutive_days} days consecutively")
 
-    if total_days_in_window < max_days_in_window:
-        remaining = max_days_in_window - total_days_in_window
-        max_stay = min(remaining, max_consecutive_days) if max_consecutive_days else remaining
-
-        print(f"\n✈️  If you fly to {country_name} today ({today.strftime('%Y-%m-%d')}):")
-        print(f"   You can stay for up to {max_stay} days")
-
-        if max_consecutive_days:
-            limit_reason = f"{max_consecutive_days}-day consecutive stay rule" if max_stay == max_consecutive_days else "remaining days in window"
-            print(f"   (Limited by: {limit_reason})")
-    else:
-        print(f"\n❌ You have exhausted your {max_days_in_window}-day limit within the window.")
+    if total_days_in_window >= max_days_in_window:
+        print(f"\nYou have exhausted your {max_days_in_window}-day limit within the window.")
         print(f"   You cannot enter {country_name} until some days expire from the window.")
+        return
+
+    max_stay = min(remaining_days, max_consecutive_days) if max_consecutive_days else remaining_days
+
+    print(f"\nIf you fly to {country_name} today ({reference_date.strftime('%Y-%m-%d')}):")
+    print(f"   You can stay for up to {max_stay} days")
+
+    if max_consecutive_days:
+        if max_stay == max_consecutive_days:
+            print(f"   (Limited by: {max_consecutive_days}-day consecutive stay rule)")
+        else:
+            print(f"   (Limited by: remaining days in window)")
 
 
-def print_future_availability(stays: List[Dict], today: datetime, window_days: int,
-                              max_days_in_window: int, max_consecutive_days: int,
-                              total_days_in_window: int):
+def print_future_availability(stays: List[Dict], reference_date: datetime, window_days: int,
+                              max_days_in_window: int, max_consecutive_days: Optional[int],
+                              total_days_in_window: int) -> None:
     """Print future availability for desired stay durations."""
     print(f"\n{'=' * 70}")
-    print(f"\n📅 FUTURE AVAILABILITY:")
+    print(f"\nFUTURE AVAILABILITY:")
     print(f"{'=' * 70}")
 
-    desired_stays = [30, 60] if max_consecutive_days >= 60 else [30]
+    # Determine which stay durations to check based on consecutive day limit
+    if max_consecutive_days and max_consecutive_days >= 60:
+        desired_stays = [30, 60]
+    else:
+        desired_stays = [30]
 
     for desired_days in desired_stays:
-        if desired_days > max_consecutive_days > 0:
+        if max_consecutive_days and desired_days > max_consecutive_days:
             continue
 
-        required_available = desired_days
-        max_used_days = max_days_in_window - required_available
+        max_used_days = max_days_in_window - desired_days
 
         if total_days_in_window <= max_used_days:
-            print(f"\n✓ You can already stay {desired_days} days today!")
+            print(f"\nYou can already stay {desired_days} days today!")
             continue
 
-        # Simulate moving forward day by day to find when enough days expire
-        found = False
+        # Find the first future date when enough days will have expired
+        found_date = None
         for days_forward in range(1, 365):
-            future_date = today + timedelta(days=days_forward)
+            future_date = reference_date + timedelta(days=days_forward)
             future_window_start = future_date - timedelta(days=window_days - 1)
-
-            # Recalculate days in window for that future date
             future_days = calculate_days_in_window(stays, future_window_start, future_date)
 
             if future_days <= max_used_days:
                 available = max_days_in_window - future_days
                 limited_to = min(available, max_consecutive_days) if max_consecutive_days else available
 
-                print(f"\n🎯 To stay {desired_days} days:")
+                print(f"\nTo stay {desired_days} days:")
                 print(f"   Wait until: {future_date.strftime('%Y-%m-%d')} ({days_forward} days from today)")
                 print(f"   On that date, you will have used {future_days} days in the window")
                 print(f"   Available for stay: {available} days (limited to {limited_to} by consecutive rule)")
-                found = True
+                found_date = future_date
                 break
 
-        if not found:
-            print(f"\n⚠️  Cannot calculate date for {desired_days}-day stay within next year")
+        if not found_date:
+            print(f"\nCannot calculate date for {desired_days}-day stay within next year")
 
 
 def analyze_visa_stays(csv_path: str, airport_codes: Set[str], country_name: str,
                        window_days: int, max_days_in_window: int,
-                       max_consecutive_days: int = None, reference_date: datetime = None):
+                       max_consecutive_days: Optional[int] = None,
+                       reference_date: Optional[datetime] = None) -> None:
     """Main analysis function.
 
     Args:
@@ -311,30 +317,23 @@ def analyze_visa_stays(csv_path: str, airport_codes: Set[str], country_name: str
     print(f"{window_days}-day window: {window_start.strftime('%Y-%m-%d')} to {reference_date.strftime('%Y-%m-%d')}")
     print(f"\n{'=' * 70}\n")
 
-    # Load and process flights
     flights = load_flights(csv_path, airport_codes)
-
     if not flights:
         print(f"No flights found to/from {country_name}")
         return
 
-    # Calculate stays
     stays = calculate_stays(flights)
-
     if not stays:
         print(f"No completed stays found in {country_name}")
         return
 
-    # Print detailed stays report
     total_days = print_stays_report(stays, window_start, reference_date, country_name)
 
-    # Print summary
     print_summary(total_days, max_days_in_window, max_consecutive_days,
                   reference_date, country_name)
 
-    # Print future availability
     print_future_availability(stays, reference_date, window_days, max_days_in_window,
-                              max_consecutive_days or float('inf'), total_days)
+                              max_consecutive_days, total_days)
 
 
 def main():
